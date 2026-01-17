@@ -31,4 +31,4 @@ COPY --from=build /app/node_modules ./node_modules
 ENV PORT=3002
 EXPOSE 3002
 
-CMD ["pnpm", "start", "--", "-p", "3002", "-H", "0.0.0.0"]
+CMD ["pnpm", "exec", "next", "start", "-p", "3002", "-H", "0.0.0.0"]
