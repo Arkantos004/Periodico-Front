@@ -1,25 +1,34 @@
-# ---------- Build stage ----------
-FROM node:20-alpine AS build
+# ---------- deps ----------
+FROM node:20-alpine AS deps
 WORKDIR /app
-
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
+# ---------- build ----------
+FROM node:20-alpine AS build
+WORKDIR /app
+RUN corepack enable
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm run build
 
-# Detecta carpeta de salida (dist o build) y la copia a /out
-RUN if [ -d dist ]; then cp -r dist /out; \
-    elif [ -d build ]; then cp -r build /out; \
-    else echo "No dist/ or build/ found after build" && ls -la && exit 1; fi
+# ---------- runtime ----------
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
 
-# ---------- Runtime stage ----------
-FROM nginx:1.27-alpine
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+RUN corepack enable
 
-COPY --from=build /out /usr/share/nginx/html
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/next.config.mjs ./next.config.mjs
+COPY --from=build /app/public ./public
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/node_modules ./node_modules
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+ENV PORT=3002
+EXPOSE 3002
+
+CMD ["pnpm", "start", "--", "-p", "3002", "-H", "0.0.0.0"]
