@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Article, getPublishedArticles, updateArticle } from "@/lib/api";
+import { Article } from "@/lib/api";
+import { getPublishedArticles, updateArticle } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
