@@ -19,3 +19,7 @@ README.md
 docker-compose.yml
 .env
 .env.*
+
+.pnpm-store
+dist
+build

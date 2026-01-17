@@ -2,24 +2,25 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Instala deps primero para aprovechar cache
-COPY package*.json ./
-RUN npm ci
+# Habilita corepack (incluye pnpm)
+RUN corepack enable
 
-# Copia el resto y construye
+# Copia manifests primero para cache
+COPY package.json pnpm-lock.yaml ./
+
+# Instala deps (frozen lockfile = reproducible)
+RUN pnpm install --frozen-lockfile
+
+# Copia el resto y build
 COPY . .
-ARG BUILD_DIR=dist
-ENV BUILD_DIR=${BUILD_DIR}
 
-RUN npm run build
+ARG BUILD_DIR=dist
+RUN pnpm run build
 
 # ---------- Runtime stage ----------
 FROM nginx:1.27-alpine
-
-# Nginx config para SPA (React Router) + caching
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Copia el build al docroot de Nginx
 ARG BUILD_DIR=dist
 COPY --from=build /app/${BUILD_DIR} /usr/share/nginx/html
 
