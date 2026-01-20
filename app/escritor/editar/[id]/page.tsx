@@ -83,7 +83,7 @@ export default function EditArticlePage() {
         const formData = new FormData()
         formData.append("file", uploadedFile)
 
-        const uploadResponse = await fetch("/api/upload", {
+        const uploadResponse = await fetch("/api/upload/image", {
           method: "POST",
           body: formData,
         })
